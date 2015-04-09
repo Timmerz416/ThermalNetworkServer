@@ -2,7 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 
-namespace NetduinoThermalNetworkServer {
+namespace ThermalNetworkServer {
 
 	public static class Ntp {
 		public static bool UpdateTimeFromNtpServer(string server, int timeZoneOffset) {

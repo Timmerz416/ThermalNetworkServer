@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thermal Network Server", "Thermal Network Server\Thermal Network Server.csproj", "{97772EC5-1612-497C-B450-878194DB5548}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XBee", "..\GBee - 96c108e8cf91\source\XBee_42\XBee.csproj", "{7F280F44-4AE1-4917-83BC-36825E729EC2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XBee", "..\..\CodePlex\GBee\source\XBee_42\XBee.csproj", "{7F280F44-4AE1-4917-83BC-36825E729EC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toolbox.NETMF.Core (4.3)", "..\..\CodePlex\NETMF Toolbox\Framework\Core\Toolbox.NETMF.Core (4.3).csproj", "{CBF2AD5F-2168-4605-BFCB-0256D65AD95B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{7F280F44-4AE1-4917-83BC-36825E729EC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F280F44-4AE1-4917-83BC-36825E729EC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F280F44-4AE1-4917-83BC-36825E729EC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBF2AD5F-2168-4605-BFCB-0256D65AD95B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBF2AD5F-2168-4605-BFCB-0256D65AD95B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBF2AD5F-2168-4605-BFCB-0256D65AD95B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBF2AD5F-2168-4605-BFCB-0256D65AD95B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

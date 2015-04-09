@@ -33,9 +33,15 @@
   </PropertyGroup>
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
-    <Compile Include="Ntp.cs" />
+    <Compile Include="Converters.cs" />
+    <Compile Include="Sensors\I2CBus.cs" />
+    <Compile Include="Sensors\I2CBusSensors.cs" />
+    <Compile Include="WebServer\Listener.cs" />
+    <Compile Include="WebServer\Requests.cs" />
+    <Compile Include="ServerProgram.cs" />
+    <Compile Include="IOSamples.cs" />
+    <Compile Include="Unused\Ntp.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.SPOT.Hardware" />
@@ -48,12 +54,16 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\GBee - 96c108e8cf91\source\XBee_42\XBee.csproj">
+    <Content Include="README.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\CodePlex\GBee\source\XBee_42\XBee.csproj">
       <Project>{7F280F44-4AE1-4917-83BC-36825E729EC2}</Project>
       <Name>XBee</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="README.txt" />
+    <ProjectReference Include="..\..\..\CodePlex\NETMF Toolbox\Framework\Core\Toolbox.NETMF.Core %284.3%29.csproj">
+      <Project>{CBF2AD5F-2168-4605-BFCB-0256D65AD95B}</Project>
+      <Name>Toolbox.NETMF.Core %284.3%29</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
