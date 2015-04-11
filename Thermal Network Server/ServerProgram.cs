@@ -353,7 +353,51 @@ namespace ThermalNetworkServer {
 				//-------------------------------------------------------------
 				// Create the xbee command packet
 				byte[] payload = null;
-				if(txCmd.ChangeRequested == RuleChangeArgs.Operation.Get) payload = new byte[] { CMD_RULE_CHANGE, STATUS_GET };
+				switch(txCmd.ChangeRequested) {
+					case RuleChangeArgs.Operation.Get:
+						payload = new byte[] { CMD_RULE_CHANGE, STATUS_GET };
+						break;
+					case RuleChangeArgs.Operation.Add:
+						// Convert the floats
+						byte[] timeArray = Converters.FloatToByte(txCmd.Rule.Time);
+						byte[] tempArray = Converters.FloatToByte(txCmd.Rule.Temperature);
+
+						// Create the payload
+						payload = new byte[12];
+						payload[0] = CMD_RULE_CHANGE;
+						payload[1] = STATUS_ADD;
+						payload[2] = txCmd.FirstPosition;
+						payload[3] = (byte) txCmd.Rule.Days;
+						for(int i = 0; i < 4; i++) {
+							payload[4 + i] = timeArray[i];
+							payload[8 + i] = tempArray[i];
+						}
+						break;
+					case RuleChangeArgs.Operation.Delete:
+						// Create the payload
+						payload = new byte[] { CMD_RULE_CHANGE, STATUS_DELETE, txCmd.FirstPosition };
+						break;
+					case RuleChangeArgs.Operation.Move:
+						// Create the payload
+						payload = new byte[] { CMD_RULE_CHANGE, STATUS_MOVE, txCmd.FirstPosition, txCmd.SecondPosition };
+						break;
+					case RuleChangeArgs.Operation.Update:
+						// Convert the floats
+						timeArray = Converters.FloatToByte(txCmd.Rule.Time);
+						tempArray = Converters.FloatToByte(txCmd.Rule.Temperature);
+
+						// Create the payload
+						payload = new byte[12];
+						payload[0] = CMD_RULE_CHANGE;
+						payload[1] = STATUS_UPDATE;
+						payload[2] = txCmd.FirstPosition;
+						payload[3] = (byte) txCmd.Rule.Days;
+						for(int i = 0; i < 4; i++) {
+							payload[4 + i] = timeArray[i];
+							payload[8 + i] = tempArray[i];
+						}
+						break;
+				}
 
 				// Send the command
 				if(SendXBeeTransmission(payload, new XBeeAddress64(RELAY_ADDRESS))) {
@@ -437,8 +481,26 @@ namespace ThermalNetworkServer {
 		/// <param name="data">The data packet</param>
 		/// <param name="sender">The XBee radio sending the data</param>
 		static void xBee_PacketReceived(XBeeApi receiver, byte[] data, XBeeAddress sender) {
+			//-----------------------------------------------------------------
+			// Check and convert the payload
+			//-----------------------------------------------------------------
 			// Format the data packet to remove 0x7d instances (assuming API mode is 2)
-			byte[] packet = FormatApiMode(data, true);
+			byte[] payload = FormatApiMode(data, true);
+
+			// Check to see if the payload contains the entire message
+			bool isRemoteSensor = false;
+			byte[] packet = null;
+			if((payload[0] == 0x7E) && (payload[3] == 0x10)) {
+				// Data is from remote sensor that passes the entire message
+				int payloadSize = payload.Length - 18;	// Calculate the packet size
+				packet = new byte[payloadSize];	// Create the packet array
+				for(int i = 0; i < payloadSize; i++) packet[i] = payload[17+i];	// Copy the contents
+				isRemoteSensor = true;	// Signal this is a simple sensor reading
+			} else {
+				// Copy the entire message
+				packet = new byte[payload.Length];
+				for(int i = 0; i < payload.Length; i++) packet[i] = payload[i];
+			}
 
 			// Print the received request to the debug console
 			string message = "Received XBee message from " + sender.ToString() + ": ";
@@ -446,15 +508,14 @@ namespace ThermalNetworkServer {
 			Debug.Print(message);
 
 			// Check the current status of communications
-			if(packet[0] == CMD_SENSOR_DATA) {
+			if((packet[0] == CMD_SENSOR_DATA) || isRemoteSensor) {
 				//-------------------------------------------------------------
 				// Process the sensor data and send acknowledgement
 				//-------------------------------------------------------------
-				UpdateSensorData(packet, sender);
+				UpdateSensorData(packet, sender, isRemoteSensor);
 				byte[] response = { CMD_SENSOR_DATA, CMD_ACK };
-				SendXBeeTransmission(response, sender);
-			}
-			else if(awaitingResponse) {
+				if(!isRemoteSensor) SendXBeeTransmission(response, sender);	// Only send acknowledgement to relay-type sensor
+			} else if(awaitingResponse) {
 				//-------------------------------------------------------------
 				// Send a response to the network based on the request
 				//-------------------------------------------------------------
@@ -586,7 +647,7 @@ namespace ThermalNetworkServer {
 		/// </summary>
 		/// <param name="packetData">The received sensor data payload</param>
 		/// <param name="sender">The XBee sending the data</param>
-		private static void UpdateSensorData(byte[] packetData, XBeeAddress sender) {
+		private static void UpdateSensorData(byte[] packetData, XBeeAddress sender, bool onlySensorData) {
 			// Create the http request string
 			string dataUpdate = "GET /db_sensor_upload.php?radio_id=";
 
@@ -594,13 +655,11 @@ namespace ThermalNetworkServer {
 			for(int i = 4; i < sender.Address.Length; i++) dataUpdate += sender.Address[i].ToString("x").ToLower();
 
 			// Iterate through the data
-//			int data_length = packet.Length - 18;	// This is needed if the routers on in AT mode - they send the whole packet
-			int data_length = packetData.Length - 1;		// This is needed if the routers are in API mode - they send only the data packet
+			int data_length = packetData.Length - (onlySensorData ? 0 : 1);	// Determine the length of the data to check
+			int byte_pos = onlySensorData ? 0 : 1;	// Determine the starting point
 			if(data_length % 5 != 0) return;	// Something funny happened
 			else {
 				int num_sensors = data_length/5;
-//				int byte_pos = 17;	// The starting point in the data to read the sensor data in AT mode
-				int byte_pos = 1;	// The staarting point in the data to read the sensor data in API mode
 				for(int cur_sensor = 0; cur_sensor < num_sensors; cur_sensor++) {
 					// Determine the type of reading
 					bool isPressure = false;
