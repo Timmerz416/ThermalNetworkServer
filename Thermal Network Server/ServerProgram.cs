@@ -76,6 +76,7 @@ namespace ThermalNetworkServer {
 		// SENSOR SETUP
 		//=====================================================================
 		// Sensors
+		private static TMP102BusSensor tempSensor = new TMP102BusSensor();
 
 		// Timing
 		private const int SENSOR_DELAY = 600000;	// The delay in microseconds between sensor readings
@@ -124,10 +125,11 @@ namespace ThermalNetworkServer {
 			//-----------------------------------------------------------------
 			while(true) {
 				// Get the sensor reading
+				double temperature = tempSensor.readTemperature();
 
 				// Update the database - Air temperature
-/*				string sensorUpdate = "GET /db_sensor_upload.php?radio_id=" + CONTROL_ADDRESS + "&temperature=" + temperature.ToString("F2") + "&power=3.3\r\n";
-				SendNetworkRequest(sensorUpdate, IPAddress.Parse(DB_ADDRESS), DB_PORT);*/
+				string sensorUpdate = "GET /db_sensor_upload.php?radio_id=" + CONTROL_ADDRESS + "&temperature=" + temperature.ToString("F2") + "&power=3.3\r\n";
+				SendNetworkRequest(sensorUpdate, IPAddress.Parse(DB_ADDRESS), DB_PORT);
 
 				// Sleep on this thread for the sensor period
 				Thread.Sleep(SENSOR_DELAY);
@@ -709,7 +711,7 @@ namespace ThermalNetworkServer {
 		/// <param name="ioPacket">The IOSamplePacket received by the XBee</param>
 		static void sensorListener_DataReceived(IoSampleResponse ioPacket) {
 			// Print the data
-			Debug.Print(ioPacket.ToString());
+			//Debug.Print(ioPacket.ToString());
 
 			// Create the http request to add the data to the database
 			string dataUpdate = "GET /db_sensor_upload.php?radio_id=";

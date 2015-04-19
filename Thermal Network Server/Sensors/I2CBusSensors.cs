@@ -540,4 +540,53 @@ namespace ThermalNetworkServer {
 			return new RTCTime(FromBCD((byte) (timeArray[0] & 0x7F)), FromBCD(timeArray[1]), FromBCD((byte) (timeArray[2] & 0x3F)), FromBCD(timeArray[4]), FromBCD(timeArray[5]), FromBCD(timeArray[6]), (DayOfWeek) FromBCD((byte) (timeArray[3] - 1)));
 		}
 	}
+
+	//=========================================================================
+	// TMP102BusSensor
+	//=========================================================================
+	class TMP102BusSensor : BasicI2CBusSensor {
+		//=====================================================================
+		// CLASS CONSTANTS
+		//=====================================================================
+		// Set bus device properties
+		private const ushort BUS_ADDRESS = 0x48;
+		private const int CLOCK_SPEED = 100;
+
+		// The TMP102 Registers
+		private const byte TEMPERATURE_REGISTER	= 0x00;
+		private const byte CONFIG_REGISTER		= 0x01;
+		private const byte T_LOW_REGISTER		= 0x02;
+		private const byte T_HIGH_REGISTER		= 0x03;
+
+		//=====================================================================
+		// Class Constructor
+		//=====================================================================
+		/// <summary>
+		/// Set the address of the humidity sensor and set the clock speed
+		/// </summary>
+		public TMP102BusSensor() : base(BUS_ADDRESS, CLOCK_SPEED) { }
+
+		//=====================================================================
+		// readTemperature
+		//=====================================================================
+		/// <summary>
+		/// Read the temperature from the sensor
+		/// </summary>
+		/// <returns>The measured temperature in Celsius</returns>
+		public double readTemperature() {
+			//-----------------------------------------------------------------
+			// Read the temperature (this is the default startup behaviour)
+			//-----------------------------------------------------------------
+			// Read the temperature register
+			byte[] tempRegister = new byte[2];
+			Read(tempRegister);
+
+			// Convert the bytes to the temperature
+			int binaryTemp = ((tempRegister[0] << 8) | tempRegister[1]) >> 4;
+			double temperature = 0.0625*binaryTemp;
+
+			return temperature;
+		}
+	}
+
 }
