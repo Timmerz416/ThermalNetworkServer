@@ -80,6 +80,7 @@ namespace ThermalNetworkServer {
 
 		// Timing
 		private const int SENSOR_DELAY = 600000;	// The delay in microseconds between sensor readings
+		//private const int SENSOR_DELAY = 60000;	// Debug delay
 
 		//=====================================================================
 		// MAIN PROGRAM
@@ -177,7 +178,11 @@ namespace ThermalNetworkServer {
 			// Send request of the network
 			using(Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)) {
 				try {
+					// Connect to the database
+//					throw new Exception();	// DEBUGGING TO AVOID GOING TO NETWORK
 					client.Connect(new IPEndPoint(address, port));	// Connect to endpoint
+
+					// Write the buffer
 					using(NetworkStream netStream = new NetworkStream(client)) {
 						byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
 						netStream.Write(buffer, 0, buffer.Length);
