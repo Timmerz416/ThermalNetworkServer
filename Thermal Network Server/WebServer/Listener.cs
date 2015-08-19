@@ -24,6 +24,7 @@ namespace ThermalNetworkServer {
 		public event RequestReceivedHandler thermoRuleChanged;
 		public event RequestReceivedHandler dataRequested;
 		public event RequestReceivedHandler timeRequestReceived;
+		public event RequestReceivedHandler statusRequest;
 
 		// Constructor
 		public SocketListener(int PortNumber) {
@@ -80,6 +81,8 @@ namespace ThermalNetworkServer {
 							if(dataRequested != null) dataRequested(clientSocket, new DataRequestArgs(cmd));
 						} else if(code == "CR") {	// Time request
 							if(timeRequestReceived != null) timeRequestReceived(clientSocket, new TimeRequestArgs(cmd));
+						} else if(code == "ST") {	// Status update
+							if(statusRequest != null) statusRequest(clientSocket, new StatusRequestArgs(cmd));
 						}
 					} else Debug.Print("Number of identified bytes is less than needed for this hardware.");
 				}

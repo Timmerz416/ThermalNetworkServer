@@ -234,6 +234,16 @@ namespace ThermalNetworkServer {
 	}
 
 	//=========================================================================
+	// StatusRequestArgs Class
+	//=========================================================================
+	/// <summary>
+	/// This class handles status requests
+	/// </summary>
+	public class StatusRequestArgs : RequestArgs {
+		public StatusRequestArgs(char[] Data) : base(Data) { }
+	}
+
+	//=========================================================================
 	// TemperatureRule Class
 	//=========================================================================
 	/// <summary>

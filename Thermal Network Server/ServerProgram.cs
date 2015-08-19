@@ -42,6 +42,7 @@ namespace ThermalNetworkServer {
 		const byte CMD_RULE_CHANGE	= 3;
 		const byte CMD_SENSOR_DATA	= 4;
 		const byte CMD_TIME_REQUEST	= 5;
+		const byte CMD_STATUS		= 6;
 
 		// XBee subcommand codes
 		const byte CMD_NACK			= 0;
@@ -79,8 +80,8 @@ namespace ThermalNetworkServer {
 		private static TMP102BusSensor tempSensor = new TMP102BusSensor();
 
 		// Timing
-		private const int SENSOR_DELAY = 600000;	// The delay in microseconds between sensor readings
-		//private const int SENSOR_DELAY = 60000;	// Debug delay
+		//private const int SENSOR_DELAY = 600000;	// The delay in microseconds between sensor readings
+		private const int SENSOR_DELAY = 60000;	// Debug delay
 
 		//=====================================================================
 		// MAIN PROGRAM
@@ -98,6 +99,7 @@ namespace ThermalNetworkServer {
 			network.thermoRuleChanged += network_thermoRuleChanged;
 			network.dataRequested += network_dataRequested;
 			network.timeRequestReceived += network_timeRequestReceived;
+			network.statusRequest += network_statusRequest;
 
 			//-----------------------------------------------------------------
 			// Initialize the XBee communications
@@ -479,6 +481,41 @@ namespace ThermalNetworkServer {
 		}
 
 		//=====================================================================
+		// network_statusRequest Event Handler
+		//=====================================================================
+		static void network_statusRequest(Socket client, RequestArgs request) {
+			// Cast the request args
+			StatusRequestArgs txCmd = (request is StatusRequestArgs) ? request as StatusRequestArgs : null;
+			if(txCmd != null) {
+				//-------------------------------------------------------------
+				// Send the message
+				//-------------------------------------------------------------
+				// Create the xbee command packet
+				byte[] payload = new byte[] { CMD_STATUS };
+
+				// Send the command
+				if(SendXBeeTransmission(payload, new XBeeAddress64(RELAY_ADDRESS))) {
+					// Update the messaging status
+					awaitingResponse = true;
+					lastXBeeCommand = CMD_STATUS;
+
+					// Get the address and port
+					IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+					requestIP = remoteIP.Address;
+					requestPort = remoteIP.Port;
+
+					return;	// All went well, so return and pick up the response through the event handler
+				} // TODO - ERROR HANDLING IF THE REQUEST WAS NOT SENT
+			} else Debug.Print("Incompatible RequestArgs sent to statusRequest: " + request.GetType().ToString());
+
+			//-----------------------------------------------------------------
+			// Send response to the network that the command failed
+			//-----------------------------------------------------------------			
+			string response = "ST:NACK";
+			SendNetworkRequest(response, client);
+		}
+
+		//=====================================================================
 		// xBee_PacketReceived
 		//=====================================================================
 		/// <summary>
@@ -582,6 +619,14 @@ namespace ThermalNetworkServer {
 									response = "CR:NACK";
 									break;
 							}
+							break;
+						//-----------------------------------------------------
+						case CMD_STATUS:
+							// Convert bytes to string message back to network
+							response = "ST:";
+							response += (packet[1] == 0 ? "OFF" : "ON") + ":";	// Sets thermostat status
+							response += (packet[2] == 0 ? "OFF" : "ON") + ":";	// Sets relay status
+							response += packet[3].ToString();					// Current target temperature
 							break;
 						//-----------------------------------------------------
 						default:
