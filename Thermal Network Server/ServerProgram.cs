@@ -62,8 +62,8 @@ namespace ThermalNetworkServer {
 		// NETWORKING MEMBERS/CONSTANTS
 		//=====================================================================
 		// Addresses
-		private const string RELAY_ADDRESS = "00 13 A2 00 40 AB 97 78";	// The address of the xbee radio controlling the relay
-		private const string CONTROL_ADDRESS = "40b0ad63";	// The short address of this controller radio (attached to this netduino plus) for DB identification
+		private const string RELAY_ADDRESS = "00 13 A2 00 40 AE B9 7F";	// The address of the xbee radio controlling the relay
+		private const string CONTROL_ADDRESS = "40aeba93";	// The short address of this controller radio (attached to this netduino plus) for DB identification
 		private const string XBEE_PORT = "COM1";
 
 		// Messaging
@@ -129,7 +129,7 @@ namespace ThermalNetworkServer {
 				double temperature = tempSensor.readTemperature();
 
 				// Update the database - Air temperature
-				string sensorUpdate = "GET /db_sensor_upload.php?radio_id=" + CONTROL_ADDRESS + "&temperature=" + temperature.ToString("F2") + "&power=3.3\r\n";
+				string sensorUpdate = "GET /db_test_upload.php?radio_id=" + CONTROL_ADDRESS + "&temperature=" + temperature.ToString("F2") + "&power=3.3\r\n";
 				SendNetworkRequest(sensorUpdate, IPAddress.Parse(DB_ADDRESS), DB_PORT);
 
 				// Sleep on this thread for the sensor period
@@ -656,7 +656,7 @@ namespace ThermalNetworkServer {
 		/// <param name="sender">The XBee sending the data</param>
 		private static void UpdateSensorData(byte[] packetData, XBeeAddress sender, bool onlySensorData) {
 			// Create the http request string
-			string dataUpdate = "GET /db_sensor_upload.php?radio_id=";
+			string dataUpdate = "GET /db_test_upload.php?radio_id=";
 
 			// Get the sensor
 			for(int i = 4; i < sender.Address.Length; i++) dataUpdate += sender.Address[i].ToString("x").ToLower();
@@ -719,7 +719,7 @@ namespace ThermalNetworkServer {
 			//Debug.Print(ioPacket.ToString());
 
 			// Create the http request to add the data to the database
-			string dataUpdate = "GET /db_sensor_upload.php?radio_id=";
+			string dataUpdate = "GET /db_test_upload.php?radio_id=";
 
 			// Get the sensor sending the data
 			dataUpdate += ioPacket.SourceSerial.ToString().Substring(8, 8).ToLower();
