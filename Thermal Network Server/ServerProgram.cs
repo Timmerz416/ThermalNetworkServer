@@ -622,11 +622,18 @@ namespace ThermalNetworkServer {
 							break;
 						//-----------------------------------------------------
 						case CMD_STATUS:
-							// Convert bytes to string message back to network
-							response = "ST:";
-							response += (packet[1] == 0 ? "OFF" : "ON") + ":";	// Sets thermostat status
-							response += (packet[2] == 0 ? "OFF" : "ON") + ":";	// Sets relay status
-							response += packet[3].ToString();					// Current target temperature
+							// Check the length of the response
+							if(packet.Length == 11) {
+								// Get the float values
+								float temperature = BitConverter.ToSingle(packet, 3);
+								float target = BitConverter.ToSingle(packet, 7);
+
+								// Create the string message
+								response = "ST:";
+								response += (packet[1] == 0 ? "OFF" : "ON") + ":";	// Sets thermostat status
+								response += (packet[2] == 0 ? "OFF" : "ON") + ":";	// Sets relay status
+								response += temperature.ToString("F2") + ":" + target.ToString("F2");
+							} else response = "ST:NACK";
 							break;
 						//-----------------------------------------------------
 						default:
