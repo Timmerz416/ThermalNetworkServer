@@ -63,7 +63,7 @@ namespace ThermalNetworkServer {
 					Debug.Print(DateTime.Now.ToString() + " " + availableBytes.ToString() + " request bytes available; " + bytesReceived + " bytes to try and receive.");
 
 					// Process the request
-					if(bytesReceived > 2) {
+					if(bytesReceived > 1) {
 						byte[] buffer = new byte[bytesReceived];
 						int readByteCount = clientSocket.Receive(buffer, bytesReceived, SocketFlags.None);
 						Debug.Print("Read " + readByteCount + " bytes from the client socket.");
