@@ -36,6 +36,17 @@ namespace ThermalNetworkServer {
 		// XBee sensor codes
 		private enum XBeePortData { Temperature, Luminosity, Pressure, Humidity, LuminosityLux, HeatingOn, ThermoOn, Power }
 
+		// XBee data codes
+		const byte TEMPERATURE_CODE =  1;
+		const byte LUMINOSITY_CODE	=  2;
+		const byte PRESSURE_CODE	=  3;
+		const byte HUMIDITY_CODE	=  4;
+		const byte POWER_CODE		=  5;
+		const byte LUX_CODE			=  6;
+		const byte HEATING_CODE		=  7;
+		const byte THERMOSTAT_CODE	=  8;
+		const byte TEMP_12BYTE_CODE	=  9;
+
 		// XBee command codes
 		const byte CMD_THERMO_POWER = 1;
 		const byte CMD_OVERRIDE		= 2;
@@ -722,16 +733,16 @@ namespace ThermalNetworkServer {
 				for(int cur_sensor = 0; cur_sensor < num_sensors; cur_sensor++) {
 					// Determine the type of reading
 					bool isPressure = false;
-					if(packetData[byte_pos] == 0x01) dataUpdate += "&temperature=";
-					else if(packetData[byte_pos] == 0x02) dataUpdate += "&luminosity=";
-					else if(packetData[byte_pos] == 0x04) {
+					if(packetData[byte_pos] == TEMPERATURE_CODE) dataUpdate += "&temperature=";
+					else if(packetData[byte_pos] == LUMINOSITY_CODE) dataUpdate += "&luminosity=";
+					else if(packetData[byte_pos] == PRESSURE_CODE) {
 						dataUpdate += "&pressure=";
 						isPressure = true;
-					} else if(packetData[byte_pos] == 0x08) dataUpdate += "&humidity=";
-					else if(packetData[byte_pos] == 0x10) dataUpdate += "&power=";
-					else if(packetData[byte_pos] == 0x20) dataUpdate += "&luminosity_lux=";
-					else if(packetData[byte_pos] == 0x40) dataUpdate += "&heating_on=";
-					else if(packetData[byte_pos] == 0x80) dataUpdate += "&thermo_on=";
+					} else if(packetData[byte_pos] == HUMIDITY_CODE) dataUpdate += "&humidity=";
+					else if(packetData[byte_pos] == POWER_CODE) dataUpdate += "&power=";
+					else if(packetData[byte_pos] == LUX_CODE) dataUpdate += "&luminosity_lux=";
+					else if(packetData[byte_pos] == HEATING_CODE) dataUpdate += "&heating_on=";
+					else if(packetData[byte_pos] == THERMOSTAT_CODE) dataUpdate += "&thermo_on=";
 					else return;	// Something funny happened
 					++byte_pos;
 
