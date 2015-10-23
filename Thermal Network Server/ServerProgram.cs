@@ -30,6 +30,10 @@ namespace ThermalNetworkServer {
 		private const int LISTENING_PORT = 5267;			// The port that the microcontroller will listen for commands
 		private const int SERVER_PORT = 6232;				// The listening port of the source commands
 
+		// Database
+		private const string DB_INSERT = "GET /db_test_upload.php?";	// DEBUGGING - The html command to upload the data into the database
+//		private const string DB_INSERT = "GET /db_sensor_upload.php?";	// The html command to upload the data into the database
+
 		//=====================================================================
 		// XBEE SETUP
 		//=====================================================================
@@ -91,8 +95,8 @@ namespace ThermalNetworkServer {
 		private static TMP102BusSensor tempSensor = new TMP102BusSensor();
 
 		// Timing
-		//private const int SENSOR_DELAY = 600000;	// The delay in microseconds between sensor readings
-		private const int SENSOR_DELAY = 60000;	// Debug delay
+//		private const int SENSOR_DELAY = 600000;	// The delay in microseconds between sensor readings
+		private const int SENSOR_DELAY = 60000;	// DEBUGGING - The delay in microseconds between sensor readings
 
 		//=====================================================================
 		// MAIN PROGRAM
@@ -142,7 +146,7 @@ namespace ThermalNetworkServer {
 				double temperature = tempSensor.readTemperature();
 
 				// Update the database - Air temperature
-				string sensorUpdate = "GET /db_test_upload.php?radio_id=" + CONTROL_ADDRESS + "&temperature=" + temperature.ToString("F2") + "&power=3.3\r\n";
+				string sensorUpdate = DB_INSERT + "radio_id=" + CONTROL_ADDRESS + "&temperature=" + temperature.ToString("F2") + "&power=3.3\r\n";
 				SendNetworkRequest(sensorUpdate, IPAddress.Parse(DB_ADDRESS), DB_PORT);
 
 				// Sleep on this thread for the sensor period
@@ -719,7 +723,7 @@ namespace ThermalNetworkServer {
 		/// <param name="sender">The XBee sending the data</param>
 		private static void UpdateSensorData(byte[] packetData, XBeeAddress sender, bool onlySensorData) {
 			// Create the http request string
-			string dataUpdate = "GET /db_test_upload.php?radio_id=";
+			string dataUpdate = DB_INSERT + "radio_id=";
 
 			// Get the sensor
 			for(int i = 4; i < sender.Address.Length; i++) dataUpdate += sender.Address[i].ToString("x").ToLower();
@@ -782,7 +786,7 @@ namespace ThermalNetworkServer {
 			//Debug.Print(ioPacket.ToString());
 
 			// Create the http request to add the data to the database
-			string dataUpdate = "GET /db_test_upload.php?radio_id=";
+			string dataUpdate = DB_INSERT + "radio_id=";
 
 			// Get the sensor sending the data
 			dataUpdate += ioPacket.SourceSerial.ToString().Substring(8, 8).ToLower();
