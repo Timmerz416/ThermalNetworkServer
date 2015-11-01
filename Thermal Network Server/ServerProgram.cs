@@ -81,7 +81,7 @@ namespace ThermalNetworkServer {
 		// Addresses
 		private const string RELAY_ADDRESS = "00 13 A2 00 40 AB 97 78";	// The address of the xbee radio controlling the relay
 //		private const string RELAY_ADDRESS = "00 13 A2 00 40 AE B9 7F";	// DEBUGGING - The address of the xbee radio controlling the relay
-		private const string CONTROL_ADDRESS = "4060ad63";	// The short address of this controller radio (attached to this netduino plus) for DB identification
+		private const string CONTROL_ADDRESS = "40b0ad63";	// The short address of this controller radio (attached to this netduino plus) for DB identification
 //		private const string CONTROL_ADDRESS = "40aeba93";	// DEBUGGING - The short address of this controller radio (attached to this netduino plus) for DB identification
 		private const string XBEE_PORT = "COM1";
 
