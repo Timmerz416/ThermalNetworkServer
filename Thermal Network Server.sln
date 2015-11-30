@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thermal Network Server", "Thermal Network Server\Thermal Network Server.csproj", "{97772EC5-1612-497C-B450-878194DB5548}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XBee", "..\..\CodePlex\GBee\source\XBee_42\XBee.csproj", "{7F280F44-4AE1-4917-83BC-36825E729EC2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XBee", "..\..\..\CodePlex\xbee\source\XBee_42\XBee.csproj", "{7F280F44-4AE1-4917-83BC-36825E729EC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toolbox.NETMF.Core (4.3)", "..\..\CodePlex\NETMF Toolbox\Framework\Core\Toolbox.NETMF.Core (4.3).csproj", "{CBF2AD5F-2168-4605-BFCB-0256D65AD95B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toolbox.NETMF.Core (4.3)", "..\..\..\CodePlex\netmftoolbox\Framework\Core\Toolbox.NETMF.Core (4.3).csproj", "{CBF2AD5F-2168-4605-BFCB-0256D65AD95B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

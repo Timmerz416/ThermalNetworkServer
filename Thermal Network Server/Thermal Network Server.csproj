@@ -57,13 +57,13 @@
     <Content Include="README.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\CodePlex\GBee\source\XBee_42\XBee.csproj">
-      <Project>{7F280F44-4AE1-4917-83BC-36825E729EC2}</Project>
-      <Name>XBee</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\CodePlex\NETMF Toolbox\Framework\Core\Toolbox.NETMF.Core %284.3%29.csproj">
+    <ProjectReference Include="..\..\..\..\CodePlex\netmftoolbox\Framework\Core\Toolbox.NETMF.Core %284.3%29.csproj">
       <Project>{CBF2AD5F-2168-4605-BFCB-0256D65AD95B}</Project>
       <Name>Toolbox.NETMF.Core %284.3%29</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\CodePlex\xbee\source\XBee_42\XBee.csproj">
+      <Project>{7F280F44-4AE1-4917-83BC-36825E729EC2}</Project>
+      <Name>XBee</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>
