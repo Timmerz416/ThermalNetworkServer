@@ -70,6 +70,7 @@ namespace ThermalNetworkServer {
 		const byte STATUS_DELETE	= 6;
 		const byte STATUS_MOVE		= 7;
 		const byte STATUS_UPDATE	= 8;
+        const byte STATUS_SET       = 9;
 
 		// XBee connection members
 		private static XBeeApi xBee;				// The object controlling the XBee interface
@@ -444,7 +445,7 @@ namespace ThermalNetworkServer {
 			//-----------------------------------------------------------------
 			// Send response to the network that the command failed
 			//-----------------------------------------------------------------			
-			string response = "PO:NACK";
+			string response = "TR:NACK";
 			SendNetworkRequest(response, client);
 		}
 
@@ -626,11 +627,11 @@ namespace ThermalNetworkServer {
 							// Create message based on command type
 							switch(packet[1]) {
 								case STATUS_GET:
-									response = "CR";
+									response = "CR:GET:";
 									for(int i = 2; i < packet.Length; i++) response += ":" + packet[i].ToString();
 									break;
-								case STATUS_UPDATE:
-									response = "CR:" + (packet[2] == CMD_ACK ? "ACK" : "NACK");
+								case STATUS_SET:
+									response = "CR:SET:" + (packet[2] == CMD_ACK ? "ACK" : "NACK");
 									break;
 								default:
 									Debug.Print("This type of Time Request command (" + packet[1] + ") does not exist!");
