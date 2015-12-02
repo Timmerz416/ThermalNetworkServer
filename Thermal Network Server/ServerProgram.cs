@@ -471,7 +471,7 @@ namespace ThermalNetworkServer {
 						payload = new byte[] { CMD_TIME_REQUEST, STATUS_GET };
 						break;
 					case TimeRequestArgs.Operations.Set:	// Set the relay time
-						payload = new byte[] { CMD_TIME_REQUEST, STATUS_UPDATE, txCmd.Seconds, txCmd.Minutes, txCmd.Hours, txCmd.Weekday, txCmd.Day, txCmd.Month, txCmd.Year };
+						payload = new byte[] { CMD_TIME_REQUEST, STATUS_SET, txCmd.Seconds, txCmd.Minutes, txCmd.Hours, txCmd.Weekday, txCmd.Day, txCmd.Month, txCmd.Year };
 						break;
 					default:	// TODO - ERROR HANDLING BY SENDING RESPONSE TO THE SOURCE
 						break;
@@ -627,7 +627,7 @@ namespace ThermalNetworkServer {
 							// Create message based on command type
 							switch(packet[1]) {
 								case STATUS_GET:
-									response = "CR:GET:";
+									response = "CR:GET";
 									for(int i = 2; i < packet.Length; i++) response += ":" + packet[i].ToString();
 									break;
 								case STATUS_SET:
