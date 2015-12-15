@@ -776,6 +776,7 @@ namespace ThermalNetworkServer {
 					}
 					if(isOverride) {
 						if(fvalue <= OVERRIDE_LIMIT) dataUpdate += "null";
+						else dataUpdate += fvalue.ToString("F2");
 					} else dataUpdate += fvalue.ToString("F2");
 					byte_pos += 4;
 				}
