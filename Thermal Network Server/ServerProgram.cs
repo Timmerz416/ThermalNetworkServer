@@ -31,14 +31,17 @@ namespace ThermalNetworkServer {
 		private const int SERVER_PORT = 6232;				// The listening port of the source commands
 
 		// Database
-		private const string DB_INSERT = "GET /db_sensor_upload.php?";	// The html command to upload the data into the database
-//		private const string DB_INSERT = "GET /db_test_upload.php?";	// DEBUGGING - The html command to upload the data into the database
+//		private const string DB_INSERT = "GET /db_sensor_upload.php?";	// The html command to upload the data into the database
+		private const string DB_INSERT = "GET /db_test_upload.php?";	// DEBUGGING - The html command to upload the data into the database
 
 		//=====================================================================
 		// XBEE SETUP
 		//=====================================================================
 		// XBee sensor codes
 		private enum XBeePortData { Temperature, Luminosity, Pressure, Humidity, LuminosityLux, HeatingOn, ThermoOn, Power }
+
+        // Constants
+        private const float OVERRIDE_LIMIT = 0f;    // Indicates the threshold on override temperature indicating status 
 
 		// XBee data codes
 		const byte TEMPERATURE_CODE =  1;
@@ -51,6 +54,7 @@ namespace ThermalNetworkServer {
 		const byte THERMOSTAT_CODE	=  8;
 		const byte TEMP_12BYTE_CODE	=  9;
 		const byte BATTERY_SOC_CODE	= 10;
+        const byte OVERRIDE_CODE    = 11;
 
 		// XBee command codes
 		const byte CMD_THERMO_POWER = 1;
@@ -80,10 +84,10 @@ namespace ThermalNetworkServer {
 		// NETWORKING MEMBERS/CONSTANTS
 		//=====================================================================
 		// Addresses
-		private const string RELAY_ADDRESS = "00 13 A2 00 40 AB 97 78";	// The address of the xbee radio controlling the relay
-//		private const string RELAY_ADDRESS = "00 13 A2 00 40 AE B9 7F";	// DEBUGGING - The address of the xbee radio controlling the relay
-		private const string CONTROL_ADDRESS = "40b0ad63";	// The short address of this controller radio (attached to this netduino plus) for DB identification
-//		private const string CONTROL_ADDRESS = "40aeba93";	// DEBUGGING - The short address of this controller radio (attached to this netduino plus) for DB identification
+//		private const string RELAY_ADDRESS = "00 13 A2 00 40 AB 97 78";	// The address of the xbee radio controlling the relay
+		private const string RELAY_ADDRESS = "00 13 A2 00 40 AE B9 7F";	// DEBUGGING - The address of the xbee radio controlling the relay
+//		private const string CONTROL_ADDRESS = "40b0ad63";	// The short address of this controller radio (attached to this netduino plus) for DB identification
+		private const string CONTROL_ADDRESS = "40aeba93";	// DEBUGGING - The short address of this controller radio (attached to this netduino plus) for DB identification
 		private const string XBEE_PORT = "COM1";
 
 		// Messaging
@@ -146,13 +150,13 @@ namespace ThermalNetworkServer {
 			// Infinite loop to collect local sensor data
 			//-----------------------------------------------------------------
 			while(true) {
-/*				// Get the sensor reading
+				// Get the sensor reading
 				double temperature = tempSensor.readTemperature();
 
 				// Update the database - Air temperature
 				string sensorUpdate = DB_INSERT + "radio_id=" + CONTROL_ADDRESS + "&temperature=" + temperature.ToString("F2") + "&power=3.3\r\n";
 				SendNetworkRequest(sensorUpdate, IPAddress.Parse(DB_ADDRESS), DB_PORT);
-*/
+
 				// Sleep on this thread for the sensor period
 				Thread.Sleep(SENSOR_DELAY);
 			}
@@ -741,18 +745,24 @@ namespace ThermalNetworkServer {
 				for(int cur_sensor = 0; cur_sensor < num_sensors; cur_sensor++) {
 					// Determine the type of reading
 					bool isPressure = false;
-					if(packetData[byte_pos] == TEMPERATURE_CODE) dataUpdate += "&temperature=";
-					else if(packetData[byte_pos] == LUMINOSITY_CODE) dataUpdate += "&luminosity=";
-					else if(packetData[byte_pos] == PRESSURE_CODE) {
-						dataUpdate += "&pressure=";
-						isPressure = true;
-					} else if(packetData[byte_pos] == HUMIDITY_CODE) dataUpdate += "&humidity=";
-					else if(packetData[byte_pos] == POWER_CODE) dataUpdate += "&power=";
-					else if(packetData[byte_pos] == LUX_CODE) dataUpdate += "&luminosity_lux=";
-					else if(packetData[byte_pos] == HEATING_CODE) dataUpdate += "&heating_on=";
-					else if(packetData[byte_pos] == THERMOSTAT_CODE) dataUpdate += "&thermo_on=";
-					else if(packetData[byte_pos] == BATTERY_SOC_CODE) dataUpdate += "&battery_soc=";
-					else return;	// Something funny happened
+					bool isOverride = false;
+                    if (packetData[byte_pos] == TEMPERATURE_CODE) dataUpdate += "&temperature=";
+                    else if (packetData[byte_pos] == LUMINOSITY_CODE) dataUpdate += "&luminosity=";
+                    else if (packetData[byte_pos] == PRESSURE_CODE) {
+                        dataUpdate += "&pressure=";
+                        isPressure = true;
+                    }
+                    else if (packetData[byte_pos] == HUMIDITY_CODE) dataUpdate += "&humidity=";
+                    else if (packetData[byte_pos] == POWER_CODE) dataUpdate += "&power=";
+                    else if (packetData[byte_pos] == LUX_CODE) dataUpdate += "&luminosity_lux=";
+                    else if (packetData[byte_pos] == HEATING_CODE) dataUpdate += "&heating_on=";
+                    else if (packetData[byte_pos] == THERMOSTAT_CODE) dataUpdate += "&thermo_on=";
+                    else if (packetData[byte_pos] == BATTERY_SOC_CODE) dataUpdate += "&battery_soc=";
+                    else if (packetData[byte_pos] == OVERRIDE_CODE) {
+						dataUpdate += "&override=";
+						isOverride = true;
+					}
+                    else return;	// Something funny happened
 					++byte_pos;
 
 					// Convert the data
@@ -764,7 +774,9 @@ namespace ThermalNetworkServer {
 						double hm = 167.64;
 						fvalue = (float) (System.Math.Pow(1 + 8.422881e-5*(hm/System.Math.Pow(Pmb - 0.3, 0.190284)), 1/0.190284)*(Pmb - 0.3));
 					}
-					dataUpdate += fvalue.ToString("F2");
+					if(isOverride) {
+						if(fvalue <= OVERRIDE_LIMIT) dataUpdate += "null";
+					} else dataUpdate += fvalue.ToString("F2");
 					byte_pos += 4;
 				}
 
