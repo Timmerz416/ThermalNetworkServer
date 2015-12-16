@@ -646,7 +646,7 @@ namespace ThermalNetworkServer {
 						//-----------------------------------------------------
 						case CMD_STATUS:
 							// Check the length of the response
-							if(packet.Length == 11) {
+							if(packet.Length == 12) {
 								// Get the float values
 								float temperature = BitConverter.ToSingle(packet, 3);
 								float target = BitConverter.ToSingle(packet, 7);
@@ -655,7 +655,8 @@ namespace ThermalNetworkServer {
 								response = "ST:";
 								response += (packet[1] == 0 ? "OFF" : "ON") + ":";	// Sets thermostat status
 								response += (packet[2] == 0 ? "OFF" : "ON") + ":";	// Sets relay status
-								response += temperature.ToString("F2") + ":" + target.ToString("F2");
+								response += temperature.ToString("F2") + ":" + target.ToString("F2") + ":";
+								response += (packet[11] == STATUS_OFF) ? "OFF" : "ON";
 							} else response = "ST:NACK";
 							break;
 						//-----------------------------------------------------
