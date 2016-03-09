@@ -11,6 +11,7 @@ using NETMF.OpenSource.XBee.Api;
 using NETMF.OpenSource.XBee.Api.Zigbee;
 using Toolbox.NETMF;
 using System.Collections;
+using System.Reflection;
 
 namespace ThermalNetworkServer {
 
@@ -200,26 +201,29 @@ namespace ThermalNetworkServer {
 		/// <param name="port">The port to address</param>
 		/// <returns>If the send was successful or not</returns>
 		private static bool SendNetworkRequest(string message, IPAddress address, int port) {
-			// Send request of the network
-			using(Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)) {
-				try {
-					// Connect to the database
-//					throw new Exception();	// DEBUGGING TO AVOID GOING TO NETWORK
-					client.Connect(new IPEndPoint(address, port));	// Connect to endpoint
+			if(port > 0) {	// Only send messages back to sockets that are listening on the server port
+				// Send request of the network
+				using(Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)) {
+					try {
+						// Connect to the database
+						//					throw new Exception();	// DEBUGGING TO AVOID GOING TO NETWORK
+						client.Connect(new IPEndPoint(address, port));	// Connect to endpoint
 
-					// Write the buffer
-					using(NetworkStream netStream = new NetworkStream(client)) {
-						byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
-						netStream.Write(buffer, 0, buffer.Length);
+						// Write the buffer
+						using(NetworkStream netStream = new NetworkStream(client)) {
+							byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
+							netStream.Write(buffer, 0, buffer.Length);
+						}
+					} catch(Exception issue) {	// This code assumes any exception results in incomplete transmission
+						Debug.Print("Following message returned when trying to send request: " + issue.Message);
+						return false;
 					}
-				} catch(Exception issue) {	// This code assumes any exception results in incomplete transmission
-					Debug.Print("Follow message returned when trying to send request: " + issue.Message);
-					return false;
 				}
-			}
 
-			// Print string to debug console
-			Debug.Print("The following message was sent to " + address.ToString() + ":" + port.ToString() + " => " + message);
+				// Print string to debug console
+				Debug.Print("The following message was sent to " + address.ToString() + ":" + port.ToString() + " => " + message);
+			} else Debug.Print("No message sent back through the network since no listening socket.");
+
 			return true;	// All assumed ok if at this point
 		}
 
@@ -232,22 +236,27 @@ namespace ThermalNetworkServer {
 		/// <param name="message">The request to send</param>
 		/// <param name="endpoint">The socket to send the request through</param>
 		/// <returns>If the send was successful or not</returns>
-		private static bool SendNetworkRequest(string message, Socket endpoint) {
-			// Send request through the provided socket
-			try {
-				using(NetworkStream netStream = new NetworkStream(endpoint)) {
-					byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
-					netStream.Write(buffer, 0, buffer.Length);
+/*		private static bool SendNetworkRequest(string message, Socket endpoint) {
+			// Determine the port the remote request was sent from
+			IPEndPoint remoteIP = endpoint.RemoteEndPoint as IPEndPoint;
+			if(remoteIP.Port == SERVER_PORT) {	// Only send messages back to sockets that are listening on the server port
+				// Send request through the provided socket
+				try {
+					using(NetworkStream netStream = new NetworkStream(endpoint)) {
+						byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
+						netStream.Write(buffer, 0, buffer.Length);
+					}
+				} catch(Exception issue) {
+					Debug.Print("Follow message returned when trying to send request: " + issue.Message);
+					return false;
 				}
-			} catch(Exception issue) {
-				Debug.Print("Follow message returned when trying to send request: " + issue.Message);
-				return false;
-			}
 
-			// Print the string to the debug console
-			Debug.Print("Sent the following message to " + endpoint.RemoteEndPoint.ToString() + ": " + message);
+				// Print the string to the debug console
+				Debug.Print("Sent the following message to " + endpoint.RemoteEndPoint.ToString() + ": " + message);
+			} else Debug.Print("No message sent back through the network since socket may not be listening.");
+
 			return true;	// All assumed ok if at this point
-		}
+		}*/
 
 		//=====================================================================
 		// SendXBeeTransmission
@@ -296,6 +305,9 @@ namespace ThermalNetworkServer {
 		/// <param name="client">The network source of the request</param>
 		/// <param name="request">The request that was made</param>
 		static void network_thermoStatusChanged(Socket client, RequestArgs request) {
+			// Get the endpoint IP
+			IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+
 			// Cast the request args
 			ThermoStatusArgs txCmd = (request is ThermoStatusArgs) ? request as ThermoStatusArgs : null;
 			if(txCmd != null) {
@@ -311,10 +323,9 @@ namespace ThermalNetworkServer {
 					awaitingResponse = true;
 					lastXBeeCommand = CMD_THERMO_POWER;
 
-					// Get the address and port
-					IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+					// Record the address and port
 					requestIP = remoteIP.Address;
-					requestPort = remoteIP.Port;
+					requestPort = request.ListeningPort;
 
 					return;	// All went well, so return and pick up the response through the event handler
 				} // TODO - ERROR HANDLING IF THE REQUEST WAS NOT SENT
@@ -323,8 +334,7 @@ namespace ThermalNetworkServer {
 			//-----------------------------------------------------------------
 			// Send response to the network that the command failed
 			//-----------------------------------------------------------------
-			string response = "TS:NACK";
-			SendNetworkRequest(response, client);
+			SendNetworkRequest("TS:NACK", remoteIP.Address, request.ListeningPort);
 		}
 
 		//=====================================================================
@@ -336,6 +346,9 @@ namespace ThermalNetworkServer {
 		/// <param name="client">The network source of the request</param>
 		/// <param name="request">The request that was made</param>
 		static void network_programOverride(Socket client, RequestArgs request) {
+			// Get the endpoint IP
+			IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+
 			// Cast the request args
 			ProgramOverrideArgs txCmd = (request is ProgramOverrideArgs) ? request as ProgramOverrideArgs : null;
 			if(txCmd != null) {
@@ -352,10 +365,9 @@ namespace ThermalNetworkServer {
 					awaitingResponse = true;
 					lastXBeeCommand = CMD_OVERRIDE;
 
-					// Get the address and port
-					IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+					// Record the remote IP and port
 					requestIP = remoteIP.Address;
-					requestPort = remoteIP.Port;
+					requestPort = request.ListeningPort;
 
 					return;	// All went well, so return and pick up the response through the event handler
 				} // TODO - ERROR HANDLING IF THE REQUEST WAS NOT SENT
@@ -364,8 +376,7 @@ namespace ThermalNetworkServer {
 			//-----------------------------------------------------------------
 			// Send response to the network that the command failed
 			//-----------------------------------------------------------------			
-			string response = "PO:NACK";
-			SendNetworkRequest(response, client);
+			SendNetworkRequest("PO:NACK", remoteIP.Address, request.ListeningPort);
 		}
 
 		//=====================================================================
@@ -377,6 +388,9 @@ namespace ThermalNetworkServer {
 		/// <param name="client">The network source of the request</param>
 		/// <param name="request">The request that was made</param>
 		static void network_thermoRuleChanged(Socket client, RequestArgs request) {
+			// Get the endpoint IP
+			IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+
 			// Cast the request args
 			RuleChangeArgs txCmd = (request is RuleChangeArgs) ? request as RuleChangeArgs : null;
 			if(txCmd != null) {
@@ -437,10 +451,9 @@ namespace ThermalNetworkServer {
 					awaitingResponse = true;
 					lastXBeeCommand = CMD_RULE_CHANGE;
 
-					// Get the address and port
-					IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+					// Record the address and port
 					requestIP = remoteIP.Address;
-					requestPort = remoteIP.Port;
+					requestPort = request.ListeningPort;
 
 					return;	// All went well, so return and pick up the response through the event handler
 				} // TODO - ERROR HANDLING IF THE REQUEST WAS NOT SENT
@@ -449,8 +462,7 @@ namespace ThermalNetworkServer {
 			//-----------------------------------------------------------------
 			// Send response to the network that the command failed
 			//-----------------------------------------------------------------			
-			string response = "TR:NACK";
-			SendNetworkRequest(response, client);
+			SendNetworkRequest("TR:NACK", remoteIP.Address, request.ListeningPort);
 		}
 
 		//=====================================================================
@@ -462,6 +474,9 @@ namespace ThermalNetworkServer {
 		/// <param name="client">The network source of the request</param>
 		/// <param name="request">The request that was made</param>
 		static void network_timeRequestReceived(Socket client, RequestArgs request) {
+			// Get the endpoint IP
+			IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+
 			// Cast the request args
 			TimeRequestArgs txCmd = (request is TimeRequestArgs) ? request as TimeRequestArgs : null;
 			if(txCmd != null) {
@@ -487,10 +502,9 @@ namespace ThermalNetworkServer {
 					awaitingResponse = true;
 					lastXBeeCommand = CMD_TIME_REQUEST;
 
-					// Get the address and port
-					IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+					// Record the address and port
 					requestIP = remoteIP.Address;
-					requestPort = remoteIP.Port;
+					requestPort = request.ListeningPort;
 
 					return;	// All went well, so return and pick up the response through the event handler
 				} // TODO - ERROR HANDLING IF THE REQUEST WAS NOT SENT
@@ -499,14 +513,16 @@ namespace ThermalNetworkServer {
 			//-----------------------------------------------------------------
 			// Send response to the network that the command failed
 			//-----------------------------------------------------------------			
-			string response = "CR:NACK";
-			SendNetworkRequest(response, client);
+			SendNetworkRequest("CR:NACK", remoteIP.Address, request.ListeningPort);
 		}
 
 		//=====================================================================
 		// network_statusRequest Event Handler
 		//=====================================================================
 		static void network_statusRequest(Socket client, RequestArgs request) {
+			// Get the endpoint IP
+			IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+
 			// Cast the request args
 			StatusRequestArgs txCmd = (request is StatusRequestArgs) ? request as StatusRequestArgs : null;
 			if(txCmd != null) {
@@ -522,10 +538,9 @@ namespace ThermalNetworkServer {
 					awaitingResponse = true;
 					lastXBeeCommand = CMD_STATUS;
 
-					// Get the address and port
-					IPEndPoint remoteIP = client.RemoteEndPoint as IPEndPoint;
+					// Record the address and port
 					requestIP = remoteIP.Address;
-					requestPort = remoteIP.Port;
+					requestPort = request.ListeningPort;
 
 					return;	// All went well, so return and pick up the response through the event handler
 				} // TODO - ERROR HANDLING IF THE REQUEST WAS NOT SENT
@@ -534,8 +549,7 @@ namespace ThermalNetworkServer {
 			//-----------------------------------------------------------------
 			// Send response to the network that the command failed
 			//-----------------------------------------------------------------			
-			string response = "ST:NACK";
-			SendNetworkRequest(response, client);
+			SendNetworkRequest("ST:NACK", remoteIP.Address, request.ListeningPort);
 		}
 
 		//=====================================================================
@@ -666,8 +680,8 @@ namespace ThermalNetworkServer {
 							break;
 					}
 
-					// Send the response
-					SendNetworkRequest(response, requestIP, SERVER_PORT);
+					// Send the response to the network
+					SendNetworkRequest(response, requestIP, requestPort);
 
 					// Reset the messaging tracking
 					awaitingResponse = false;

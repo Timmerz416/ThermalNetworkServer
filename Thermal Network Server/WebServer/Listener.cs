@@ -69,8 +69,8 @@ namespace ThermalNetworkServer {
 						Debug.Print("Read " + readByteCount + " bytes from the client socket.");
 
 						// Get the first two characters, and check the codes
-						string code = new string(Encoding.UTF8.GetChars(buffer, 0, 2));
 						char[] cmd = Encoding.UTF8.GetChars(buffer);
+						string code = RequestArgs.GetCommand(cmd);
 						if(code == "TS") {	// Thermo status command
 							if(thermoStatusChanged != null) thermoStatusChanged(clientSocket, new ThermoStatusArgs(cmd));
 						} else if(code == "PO") {	// Program override command

@@ -15,8 +15,9 @@ namespace ThermalNetworkServer {
 	/// </summary>
 	public class RequestArgs {
 		// Private members
-		protected string _command;	// Contains the received message from the socket
-		protected string[] _args;	// Parsed arguments for the command
+		protected string _command;		// Contains the received message from the socket
+		protected int _listening_port;	// The port that the requestor is listening on
+		protected string[] _args;		// Parsed arguments for the command
 
 		//=====================================================================
 		// Constructor
@@ -26,8 +27,28 @@ namespace ThermalNetworkServer {
 		/// </summary>
 		/// <param name="Data">The message sent over the network</param>
 		public RequestArgs(char[] Data) {
+			// Split the request
 			_command = new string(Data);
-			_args = _command.Split(':');
+			string[] tokens = _command.Split(':');
+
+			// Get the listening port and set the args
+			_listening_port = int.Parse(tokens[0]);	// First arg is the listening port
+			_args = new string[tokens.Length - 1];
+			Array.Copy(tokens, 1, _args, 0, tokens.Length - 1);	// Copy the rest of the args
+		}
+
+		public static string GetCommand(char[] command) {
+			string cmd = new string(command);
+			string[] tokens = cmd.Split(':');
+			return tokens[1];
+		}
+
+		public bool ListeningPortAvailable {
+			get { return _listening_port != 0; }
+		}
+
+		public int ListeningPort {
+			get { return _listening_port; }
 		}
 	}
 
