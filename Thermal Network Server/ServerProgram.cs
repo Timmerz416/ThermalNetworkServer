@@ -32,8 +32,8 @@ namespace ThermalNetworkServer {
 		private const int SERVER_PORT = 6232;				// The listening port of the source commands
 
 		// Database
-		private const string DB_INSERT = "GET /db_sensor_upload.php?";	// The html command to upload the data into the database
-//		private const string DB_INSERT = "GET /db_test_upload.php?";	// DEBUGGING - The html command to upload the data into the database
+//		private const string DB_INSERT = "GET /db_sensor_upload.php?";	// The html command to upload the data into the database
+		private const string DB_INSERT = "GET /db_test_upload.php?";	// DEBUGGING - The html command to upload the data into the database
 
 		//=====================================================================
 		// XBEE SETUP
@@ -85,10 +85,10 @@ namespace ThermalNetworkServer {
 		// NETWORKING MEMBERS/CONSTANTS
 		//=====================================================================
 		// Addresses
-		private const string RELAY_ADDRESS = "00 13 A2 00 40 AB 97 78";	// The address of the xbee radio controlling the relay
-//		private const string RELAY_ADDRESS = "00 13 A2 00 40 AE B9 7F";	// DEBUGGING - The address of the xbee radio controlling the relay
-		private const string CONTROL_ADDRESS = "40b0ad63";	// The short address of this controller radio (attached to this netduino plus) for DB identification
-//		private const string CONTROL_ADDRESS = "40aeba93";	// DEBUGGING - The short address of this controller radio (attached to this netduino plus) for DB identification
+//		private const string RELAY_ADDRESS = "00 13 A2 00 40 AB 97 78";	// The address of the xbee radio controlling the relay
+		private const string RELAY_ADDRESS = "00 13 A2 00 40 AE B9 7F";	// DEBUGGING - The address of the xbee radio controlling the relay
+//		private const string CONTROL_ADDRESS = "40b0ad63";	// The short address of this controller radio (attached to this netduino plus) for DB identification
+		private const string CONTROL_ADDRESS = "40aeba93";	// DEBUGGING - The short address of this controller radio (attached to this netduino plus) for DB identification
 		private const string XBEE_PORT = "COM1";
 
 		// Messaging
