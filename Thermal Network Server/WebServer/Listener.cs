@@ -57,36 +57,47 @@ namespace ThermalNetworkServer {
 					_client = clientSocket.RemoteEndPoint as IPEndPoint;
 					Debug.Print("Received request from " + _client.ToString());
 
-					// Determine the size of the transmission
-					int availableBytes = clientSocket.Available;
-					int bytesReceived = (availableBytes > MAX_REQUEST_SIZE ? MAX_REQUEST_SIZE : availableBytes);
-					Debug.Print(DateTime.Now.ToString() + " " + availableBytes.ToString() + " request bytes available; " + bytesReceived + " bytes to try and receive.");
+					// Enter reading loop
+					int availableBytes = 0;
+					int triesLeft = 9;
+					while(availableBytes == 0) {
+						// Determine the size of the transmission
+						availableBytes = clientSocket.Available;
+						int bytesReceived = (availableBytes > MAX_REQUEST_SIZE ? MAX_REQUEST_SIZE : availableBytes);
+						Debug.Print(DateTime.Now.ToString() + " " + availableBytes.ToString() + " request bytes available; " + bytesReceived + " bytes to try and receive.");
 
-					// Process the request
-					if(bytesReceived > 1) {
-						byte[] buffer = new byte[bytesReceived];
-						int readByteCount = clientSocket.Receive(buffer, bytesReceived, SocketFlags.None);
-						Debug.Print("Read " + readByteCount + " bytes from the client socket.");
+						// Process the request
+						if(bytesReceived > 1) {
+							byte[] buffer = new byte[bytesReceived];
+							int readByteCount = clientSocket.Receive(buffer, bytesReceived, SocketFlags.None);
+							Debug.Print("Read " + readByteCount + " bytes from the client socket.");
 
-						// Get the first two characters, and check the codes
-						char[] cmd = Encoding.UTF8.GetChars(buffer);
-						string code = RequestArgs.GetCommand(cmd);
-						if(code == "TS") {	// Thermo status command
-							if(thermoStatusChanged != null) thermoStatusChanged(clientSocket, new ThermoStatusArgs(cmd));
-						} else if(code == "PO") {	// Program override command
-							if(programOverrideRequested != null) programOverrideRequested(clientSocket, new ProgramOverrideArgs(cmd));
-						} else if(code == "TR") {	// Thermo rule command
-							if(thermoRuleChanged != null) thermoRuleChanged(clientSocket, new RuleChangeArgs(cmd));
-						} else if(code == "DR") {	// Data request
-							if(dataRequested != null) dataRequested(clientSocket, new DataRequestArgs(cmd));
-						} else if(code == "CR") {	// Time request
-							if(timeRequestReceived != null) timeRequestReceived(clientSocket, new TimeRequestArgs(cmd));
-						} else if(code == "ST") {	// Status update
-							if(statusRequest != null) statusRequest(clientSocket, new StatusRequestArgs(cmd));
+							// Get the first two characters, and check the codes
+							char[] cmd = Encoding.UTF8.GetChars(buffer);
+							string code = RequestArgs.GetCommand(cmd);
+							if(code == "TS") {	// Thermo status command
+								if(thermoStatusChanged != null) thermoStatusChanged(clientSocket, new ThermoStatusArgs(cmd));
+							} else if(code == "PO") {	// Program override command
+								if(programOverrideRequested != null) programOverrideRequested(clientSocket, new ProgramOverrideArgs(cmd));
+							} else if(code == "TR") {	// Thermo rule command
+								if(thermoRuleChanged != null) thermoRuleChanged(clientSocket, new RuleChangeArgs(cmd));
+							} else if(code == "DR") {	// Data request
+								if(dataRequested != null) dataRequested(clientSocket, new DataRequestArgs(cmd));
+							} else if(code == "CR") {	// Time request
+								if(timeRequestReceived != null) timeRequestReceived(clientSocket, new TimeRequestArgs(cmd));
+							} else if(code == "ST") {	// Status update
+								if(statusRequest != null) statusRequest(clientSocket, new StatusRequestArgs(cmd));
+							}
+						} else if(triesLeft == 0) {
+							Debug.Print("Cannot read buffer - continuing without data.");
+							break;
+						} else {
+							Debug.Print("Buffer is empty - will try to read buffer " + triesLeft + " more times...");
+							--triesLeft;
 						}
-					} else Debug.Print("Number of identified bytes is less than needed for this hardware.");
+						Thread.Sleep(10);	// Provide some delay to help prevent lock-ups
+					}
 				}
-				Thread.Sleep(10);	// Provide some delay to help prevent lock-ups
 			}
 		}
 
